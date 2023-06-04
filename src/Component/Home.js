@@ -20,7 +20,7 @@ function Home(){
     }
 
     function edituser(item){
-        navigate("/adduser");
+        navigate("/edituser",{state:item});
     }
     return(
         <>
