@@ -6,9 +6,10 @@ function Edituser(){
     const {state} = useLocation();
     const [valueinput,setValueinput] = useState(state);
     const [userArticle,setUserArticle] = useState([{article:""}]);
-
+    const [idArticle,setIdArticle] = useState(null)
+    
     useEffect(()=>{
-        axios.get("https://647aa603d2e5b6101db0781e.mockapi.io/users/2/articles")
+        axios.get("https://647aa603d2e5b6101db0781e.mockapi.io/users/" + valueinput.id + "/articles")
         .then(res=>setUserArticle(res.data))
     },[])
 
@@ -25,10 +26,37 @@ function Edituser(){
 
     function addarticle(e){
         e.preventDefault();
-        axios.post("https://647aa603d2e5b6101db0781e.mockapi.io/"+valueinput.id+"/
-        articles",{
-            article:valueinput.article
-        })
+        if (idArticle==null){
+            axios.post("https://647aa603d2e5b6101db0781e.mockapi.io/users/"+valueinput.id+"/articles",{
+                article:valueinput.article
+            })
+            .then(res=>setUserArticle([...userArticle,res.data]))
+            setValueinput({...valueinput,article:""})
+        }
+        else {
+            axios.put("https://647aa603d2e5b6101db0781e.mockapi.io/users/"+valueinput.id+"/articles/"+idArticle,{
+                article:valueinput.article
+            })
+            const userArticleclone = [...userArticle];
+            var index = userArticleclone.map(x => {
+                return x.id;
+              }).indexOf(idArticle);
+            userArticleclone[index].article=valueinput.article;
+            setUserArticle(userArticleclone)
+            setValueinput({...valueinput,article:""})
+            setIdArticle(null)
+        }
+        
+    }
+
+    function delarticle(id){
+        axios.delete("https://647aa603d2e5b6101db0781e.mockapi.io/users/"+valueinput.id+"/articles/"+id)
+        setUserArticle(userArticle.filter(item=>item.id!=id))
+    }
+
+    function editarticle(item){
+        setValueinput({...valueinput,article:item.article})
+        setIdArticle(item.id)
     }
     return(
         <>
@@ -44,7 +72,7 @@ function Edituser(){
             <form onSubmit={(e)=>addarticle(e)}>
                 <label>Article</label><br></br>
                 <input onChange={(e)=>handleChange(e)} name="article" value={valueinput.article}></input>
-                <button className="btn btn-success" type="submit">Add</button>
+                <button className="btn btn-success" type="submit">{idArticle?"Edit":"Add"}</button>
             </form>
 
             <table className="table table-striped">
@@ -56,7 +84,7 @@ function Edituser(){
                     {userArticle.map((item,index)=>(
                         <tr key={index}>
                             <td>{item.article}</td>
-                            <td><button className="btn btn-primary">Edit</button><button className="btn btn-danger">Delete</button></td>
+                            <td><button className="btn btn-primary" onClick={()=>editarticle(item)}>Edit</button><button className="btn btn-danger" onClick={()=>delarticle(item.id)}>Delete</button></td>
                         </tr>
                     ))}
                 </tbody>
